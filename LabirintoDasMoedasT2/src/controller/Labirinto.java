@@ -12,6 +12,7 @@ public class Labirinto {
 		tabuleiro.imprimeTabuleiroVisivelPeloAgente();
 		
 		Agente agente = (Agente) tabuleiro.getAgente();
-		agente.ativarModoAutonomo();
+		//agente.ativarModoAutonomo();
+		agente.ativarAprendizadoDeMaquina();
 	}
 }

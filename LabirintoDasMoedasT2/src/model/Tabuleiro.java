@@ -280,10 +280,31 @@ public class Tabuleiro {
 		return null;
 	}
 	
+	public boolean movimentoValido(Direcao direcao) {
+		Objeto objeto = getObjetoPelaDirecao(agente.getCoordenadas(), direcao);
+		
+		if (objeto != null && objeto.getTipo() != TipoDeObjeto.MURO) {
+			
+			if (objeto.getTipo() == TipoDeObjeto.BURACO) {
+				Objeto objetoDoObjeto = getObjetoPelaDirecao(objeto.getCoordenadas(), direcao);
+				
+				if (objetoDoObjeto != null && objetoDoObjeto.getTipo() != TipoDeObjeto.MURO 
+						&& objetoDoObjeto.getTipo() != TipoDeObjeto.BURACO) {
+					return true;
+				}
+			} else {
+				return true;
+			}
+		}
+		
+		//System.out.println("--------- Game Over. ---------");
+		return false;
+	}
+	
 	public void moverAgenteEPegarSacoDeMoedas(Direcao direcao) {
 		Objeto objeto = getObjetoPelaDirecao(agente.getCoordenadas(), direcao);
 
-		if (objeto != null && objeto.getTipo() == TipoDeObjeto.SACO_DE_MOEDAS) {
+		if (movimentoValido(direcao) && objeto.getTipo() == TipoDeObjeto.SACO_DE_MOEDAS) {
 			SacoDeMoedas sacoDeMoedas = (SacoDeMoedas) objeto;
 			agente.getSacosDeMoedas().add(sacoDeMoedas);
 			agente.adicionarPontos(sacoDeMoedas.getQuantidadeDeMoedas());
@@ -296,34 +317,30 @@ public class Tabuleiro {
 	public void moverAgente(Direcao direcao) {
 		Objeto objeto = getObjetoPelaDirecao(agente.getCoordenadas(), direcao);
 
-		if (objeto != null) {
-			if (objeto.getTipo() == TipoDeObjeto.BURACO) {
-				System.out.println("--------- Game Over. ---------");
-
-			} else if (objeto.getTipo() == TipoDeObjeto.LIVRE) {
+		if (movimentoValido(direcao)) {
+			if (objeto.getTipo() == TipoDeObjeto.LIVRE) {
 				Objeto substituto = null;
 				if (!objetosParaRetornarAoTabuleiro.isEmpty()) {
 					substituto = objetosParaRetornarAoTabuleiro.remove();
 				} else {
 					substituto = new Livre(agente.getPosicaoX(), agente.getPosicaoY());
 				}
-				
+
 				trocaObjeto(agente, substituto);
 				trocaObjeto(objeto, agente);
 				iteracoes++;
 
-			} else if (objeto.getTipo() == TipoDeObjeto.PORTA
-					|| objeto.getTipo() == TipoDeObjeto.SACO_DE_MOEDAS) {
-				
+			} else if (objeto.getTipo() == TipoDeObjeto.PORTA || objeto.getTipo() == TipoDeObjeto.SACO_DE_MOEDAS) {
+
 				Objeto substituto = null;
 				if (!objetosParaRetornarAoTabuleiro.isEmpty()) {
 					substituto = objetosParaRetornarAoTabuleiro.remove();
 				} else {
 					substituto = new Livre(agente.getPosicaoX(), agente.getPosicaoY());
 				}
-				
+
 				objetosParaRetornarAoTabuleiro.add(objeto);
-				
+
 				trocaObjeto(agente, substituto);
 				trocaObjeto(objeto, agente);
 				iteracoes++;
@@ -334,7 +351,7 @@ public class Tabuleiro {
 	public void moverAgenteParaPorta(Direcao direcao) {
 		Objeto objeto = getObjetoPelaDirecao(agente.getCoordenadas(), direcao);
 
-		if (objeto != null) {
+		if (movimentoValido(direcao)) {
 			if (objeto.getTipo() == TipoDeObjeto.PORTA) {
 				trocaObjeto(agente, new Livre(agente.getPosicaoX(), agente.getPosicaoY()));
 				
@@ -348,37 +365,34 @@ public class Tabuleiro {
 	public void moverAgenteComPulo(Direcao direcao) {
 		Objeto objeto = getObjetoPelaDirecao(agente.getCoordenadas(), direcao);
 		
-		if (objeto != null && objeto.getTipo() == TipoDeObjeto.BURACO) {
+		if (movimentoValido(direcao) && objeto.getTipo() == TipoDeObjeto.BURACO) {
 			Objeto objetoDoObjeto = getObjetoPelaDirecao(objeto.getCoordenadas(), direcao);
-
-			if (objetoDoObjeto != null  && objetoDoObjeto.getTipo() != TipoDeObjeto.MURO) {
-				Objeto substituto = null;
-				
-				if (!objetosParaRetornarAoTabuleiro.isEmpty()) {
-					substituto = objetosParaRetornarAoTabuleiro.remove();
-				} else {
-					substituto = new Livre(agente.getPosicaoX(), agente.getPosicaoY());
-				}
-				
-				trocaObjeto(agente, substituto);
-				
-				if (objetoDoObjeto.getTipo() == TipoDeObjeto.PORTA) {
-					objetosParaRetornarAoTabuleiro.add(objetoDoObjeto);
-				}
-				
-				trocaObjeto(objetoDoObjeto, agente);
-				iteracoes++;
+			Objeto substituto = null;
+			
+			if (!objetosParaRetornarAoTabuleiro.isEmpty()) {
+				substituto = objetosParaRetornarAoTabuleiro.remove();
+			} else {
+				substituto = new Livre(agente.getPosicaoX(), agente.getPosicaoY());
 			}
+			
+			trocaObjeto(agente, substituto);
+			
+			if (objetoDoObjeto.getTipo() == TipoDeObjeto.PORTA) {
+				objetosParaRetornarAoTabuleiro.add(objetoDoObjeto);
+			}
+			
+			trocaObjeto(objetoDoObjeto, agente);
+			iteracoes++;
 		}
 	}
 	
 	public void moverAgenteComPuloEPegarSacoDeMoedas(Direcao direcao) {
 		Objeto objeto = getObjetoPelaDirecao(agente.getCoordenadas(), direcao);
 
-		if (objeto != null && objeto.getTipo() == TipoDeObjeto.BURACO) {
+		if (movimentoValido(direcao) && objeto.getTipo() == TipoDeObjeto.BURACO) {
 			Objeto objetoDoObjeto = getObjetoPelaDirecao(objeto.getCoordenadas(), direcao);
 			
-			if (objetoDoObjeto != null && objetoDoObjeto.getTipo() == TipoDeObjeto.SACO_DE_MOEDAS) {
+			if (objetoDoObjeto.getTipo() == TipoDeObjeto.SACO_DE_MOEDAS) {
 				SacoDeMoedas sacoDeMoedas = (SacoDeMoedas) objetoDoObjeto;
 				agente.getSacosDeMoedas().add(sacoDeMoedas);
 				agente.adicionarPontos(sacoDeMoedas.getQuantidadeDeMoedas());
