@@ -73,9 +73,7 @@ public class Tabuleiro {
 			}
 		}
 		
-		imprimeTabuleiro();
-		imprimirPontuacao();
-		imprimeTabuleiroVisivelPeloAgente();
+		//imprime();
 	}
 	
 	private void criaParedesA() {
@@ -177,7 +175,7 @@ public class Tabuleiro {
 			
 			System.out.println(sb.toString());
 			
-			System.out.println("Iterações: " + iteracoes);	
+			//System.out.println("Iterações: " + iteracoes);	
 		}
 	}
 	
