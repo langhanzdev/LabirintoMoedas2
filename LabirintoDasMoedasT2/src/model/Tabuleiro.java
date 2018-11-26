@@ -1,5 +1,6 @@
 package model;
 
+import java.util.ArrayList;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
@@ -37,6 +38,23 @@ public class Tabuleiro {
 			this.tabuleiro = null;
 		}
 	}
+	
+	public void resetTabuleiroOpcao1() {
+		this.tabuleiro[agente.getPosicaoX()][agente.getPosicaoY()] = new Livre(agente.getPosicaoX(), agente.getPosicaoY());
+		
+		this.agente.setCoordenadas(new Coordenadas(0, 0));
+		this.agente.setSacosDeMoedas(new ArrayList<SacoDeMoedas>());
+		this.agente.setPontuacao(0);
+		this.agente.setEstadoAtual(EstadoDoAgente.PROCURANDO_PORTA);
+		this.tabuleiro[0][0] = agente;
+		
+		criaSacosDeMoedasA();
+		
+		this.objetosParaRetornarAoTabuleiro = new PriorityQueue<Objeto>();
+		this.iteracoes = 0;
+		
+		inicializaTabuleiro();
+	}
 
 	public Objeto getAgente() {
 		return agente;
@@ -54,6 +72,10 @@ public class Tabuleiro {
 				}
 			}
 		}
+		
+		imprimeTabuleiro();
+		imprimirPontuacao();
+		imprimeTabuleiroVisivelPeloAgente();
 	}
 	
 	private void criaParedesA() {
@@ -100,6 +122,30 @@ public class Tabuleiro {
 		Agente a = new Agente(0, 0, this);
 		tabuleiro[0][0] = a;
 		this.agente = a;
+	}
+	
+	public String pontuacaoLinhaColuna(int i, int j, int espacos) {
+		StringBuilder sb = new StringBuilder();
+		
+		if (((i >= agente.getPosicaoX() - 2 && i <= agente.getPosicaoX() + 2) && j == agente.getPosicaoY())
+				|| ((j >= agente.getPosicaoY() - 2 && j <= agente.getPosicaoY() + 2) && i == agente.getPosicaoX())) {
+				
+				if (i == agente.getPosicaoX() - 2 && verificaSeEMuroOuNulo(agente.getPosicaoX()-1, agente.getPosicaoY())) {
+					sb.append("   ");
+				} else if (i == agente.getPosicaoX() + 2 && verificaSeEMuroOuNulo(agente.getPosicaoX()+1, agente.getPosicaoY())) {
+					sb.append("   ");
+				} else if (j == agente.getPosicaoY() - 2 && verificaSeEMuroOuNulo(agente.getPosicaoX(), agente.getPosicaoY()-1)) {
+					sb.append("   ");
+				} else if (j == agente.getPosicaoY() + 2 && verificaSeEMuroOuNulo(agente.getPosicaoX(), agente.getPosicaoY()+1)) {
+					sb.append("   ");
+				} else {
+					sb.append(" ");
+					sb.append(insereEspacos(this.tabuleiro[i][j].toString(), espacos));		
+				}
+			} else {
+				sb.append("   ");
+			}
+		return sb.toString();
 	}
 
 	public void imprimeTabuleiro() {
@@ -235,6 +281,12 @@ public class Tabuleiro {
 			System.out.println(sb.toString());
 		}
 	}
+	
+	public void imprime() {
+		imprimeTabuleiro();
+		imprimirPontuacao();
+		imprimeTabuleiroVisivelPeloAgente();
+	}
 
 	private String insereEspacos(String text, int num) {
 		while (text.length() < num) {
@@ -280,20 +332,24 @@ public class Tabuleiro {
 		return null;
 	}
 	
-	public boolean movimentoValido(Direcao direcao) {
+	public boolean movimentoValido(Direcao direcao, boolean comPulo) {
 		Objeto objeto = getObjetoPelaDirecao(agente.getCoordenadas(), direcao);
 		
 		if (objeto != null && objeto.getTipo() != TipoDeObjeto.MURO) {
 			
-			if (objeto.getTipo() == TipoDeObjeto.BURACO) {
+			if (objeto.getTipo() != TipoDeObjeto.BURACO && !comPulo) {
+				return true;
+				
+			} else if (objeto.getTipo() == TipoDeObjeto.BURACO && comPulo) {
 				Objeto objetoDoObjeto = getObjetoPelaDirecao(objeto.getCoordenadas(), direcao);
 				
 				if (objetoDoObjeto != null && objetoDoObjeto.getTipo() != TipoDeObjeto.MURO 
 						&& objetoDoObjeto.getTipo() != TipoDeObjeto.BURACO) {
 					return true;
 				}
-			} else {
-				return true;
+			} else if (comPulo) {
+				return false;
+				
 			}
 		}
 		
@@ -304,7 +360,7 @@ public class Tabuleiro {
 	public void moverAgenteEPegarSacoDeMoedas(Direcao direcao) {
 		Objeto objeto = getObjetoPelaDirecao(agente.getCoordenadas(), direcao);
 
-		if (movimentoValido(direcao) && objeto.getTipo() == TipoDeObjeto.SACO_DE_MOEDAS) {
+		if (movimentoValido(direcao, false) && objeto.getTipo() == TipoDeObjeto.SACO_DE_MOEDAS) {
 			SacoDeMoedas sacoDeMoedas = (SacoDeMoedas) objeto;
 			agente.getSacosDeMoedas().add(sacoDeMoedas);
 			agente.adicionarPontos(sacoDeMoedas.getQuantidadeDeMoedas());
@@ -317,7 +373,7 @@ public class Tabuleiro {
 	public void moverAgente(Direcao direcao) {
 		Objeto objeto = getObjetoPelaDirecao(agente.getCoordenadas(), direcao);
 
-		if (movimentoValido(direcao)) {
+		if (movimentoValido(direcao, false)) {
 			if (objeto.getTipo() == TipoDeObjeto.LIVRE) {
 				Objeto substituto = null;
 				if (!objetosParaRetornarAoTabuleiro.isEmpty()) {
@@ -351,7 +407,7 @@ public class Tabuleiro {
 	public void moverAgenteParaPorta(Direcao direcao) {
 		Objeto objeto = getObjetoPelaDirecao(agente.getCoordenadas(), direcao);
 
-		if (movimentoValido(direcao)) {
+		if (movimentoValido(direcao, false)) {
 			if (objeto.getTipo() == TipoDeObjeto.PORTA) {
 				trocaObjeto(agente, new Livre(agente.getPosicaoX(), agente.getPosicaoY()));
 				
@@ -365,7 +421,7 @@ public class Tabuleiro {
 	public void moverAgenteComPulo(Direcao direcao) {
 		Objeto objeto = getObjetoPelaDirecao(agente.getCoordenadas(), direcao);
 		
-		if (movimentoValido(direcao) && objeto.getTipo() == TipoDeObjeto.BURACO) {
+		if (movimentoValido(direcao, true) && objeto.getTipo() == TipoDeObjeto.BURACO) {
 			Objeto objetoDoObjeto = getObjetoPelaDirecao(objeto.getCoordenadas(), direcao);
 			Objeto substituto = null;
 			
@@ -389,7 +445,7 @@ public class Tabuleiro {
 	public void moverAgenteComPuloEPegarSacoDeMoedas(Direcao direcao) {
 		Objeto objeto = getObjetoPelaDirecao(agente.getCoordenadas(), direcao);
 
-		if (movimentoValido(direcao) && objeto.getTipo() == TipoDeObjeto.BURACO) {
+		if (movimentoValido(direcao, true) && objeto.getTipo() == TipoDeObjeto.BURACO) {
 			Objeto objetoDoObjeto = getObjetoPelaDirecao(objeto.getCoordenadas(), direcao);
 			
 			if (objetoDoObjeto.getTipo() == TipoDeObjeto.SACO_DE_MOEDAS) {

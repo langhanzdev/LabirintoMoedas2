@@ -254,7 +254,7 @@ public class Agente extends Objeto {
 		return valor;
 	}
 	
-	public void rodarRedeNeural(Direcao ultimaDirecao) {
+	public Direcao rodarRedeNeural(Direcao ultimaDirecao, int iteracao) {
 		Perceptron rede = new Perceptron();
 
 		// Livre = 4 Muro = 3 Buraco = 1 Saco = 2 Porta = 5
@@ -279,15 +279,32 @@ public class Agente extends Objeto {
 		Direcao direcao = null;
 		
 		// Verifica direcao
-		if (ultimaDirecao != Direcao.NORTE && (valorSaidaDirecaoNeuronio0 > valorSaidaDirecaoNeuronio1 && ultimaDirecao != Direcao.LESTE) 
-				&& (valorSaidaDirecaoNeuronio0 > valorSaidaDirecaoNeuronio2 && ultimaDirecao != Direcao.OESTE)) {
+		if (valorSaidaDirecaoNeuronio0 > valorSaidaDirecaoNeuronio1 && valorSaidaDirecaoNeuronio0 > valorSaidaDirecaoNeuronio2) {
 			direcao = Direcao.SUL;
-		} else if (ultimaDirecao != Direcao.LESTE && (valorSaidaDirecaoNeuronio1 > valorSaidaDirecaoNeuronio0 && ultimaDirecao != Direcao.NORTE) 
-				&& (valorSaidaDirecaoNeuronio1 > valorSaidaDirecaoNeuronio2 && ultimaDirecao != Direcao.OESTE)) {
-			direcao = Direcao.LESTE;
-		} else if (ultimaDirecao != Direcao.OESTE && (valorSaidaDirecaoNeuronio2 > valorSaidaDirecaoNeuronio0 && ultimaDirecao != Direcao.NORTE) 
-				&& (valorSaidaDirecaoNeuronio2 > valorSaidaDirecaoNeuronio1 && ultimaDirecao != Direcao.LESTE)) {
-			direcao = Direcao.OESTE;
+			
+		} else if (valorSaidaDirecaoNeuronio1 > valorSaidaDirecaoNeuronio0 && valorSaidaDirecaoNeuronio1 > valorSaidaDirecaoNeuronio2) {
+			// evita loop
+			if (ultimaDirecao != Direcao.OESTE) {
+				direcao = Direcao.LESTE;
+				
+			} else if (valorSaidaDirecaoNeuronio0 > valorSaidaDirecaoNeuronio2) {
+				direcao = Direcao.SUL;
+				
+			} else {
+				direcao = Direcao.OESTE;
+			}
+			
+		} else if (valorSaidaDirecaoNeuronio2 > valorSaidaDirecaoNeuronio0 && valorSaidaDirecaoNeuronio2 > valorSaidaDirecaoNeuronio1) {
+			// evita loop
+			if (ultimaDirecao != Direcao.LESTE) {
+				direcao = Direcao.OESTE;
+				
+			} else if (valorSaidaDirecaoNeuronio0 > valorSaidaDirecaoNeuronio1) {
+				direcao = Direcao.SUL;
+				
+			} else {
+				direcao = Direcao.LESTE;
+			}
 		}
 		
 		boolean moveComPulo = false;
@@ -296,25 +313,32 @@ public class Agente extends Objeto {
 			moveComPulo = true;
 		}
 				
-		// Verificar se direcao e valida
-		if (getTabuleiro().movimentoValido(direcao)) {
+		//Imprime movimento
+		imprimeMovimento(direcao, moveComPulo, iteracao);
+		
+		// Verificar se movimento e valido
+		if (getTabuleiro().movimentoValido(direcao, moveComPulo)) {
 			
 			// Verifica movimento (anda ou pula)
 			if (moveComPulo) {
 				getTabuleiro().moverAgenteComPulo(direcao); 
+			} else if (getTabuleiro().getObjetoPelaDirecao(getCoordenadas(), direcao).getTipo() == TipoDeObjeto.SACO_DE_MOEDAS) {
+				getTabuleiro().moverAgenteEPegarSacoDeMoedas(direcao);
 			} else {
 				getTabuleiro().moverAgente(direcao);
-			}			
+			}	
+			
+			//Imprime tabuleiro
+			getTabuleiro().imprime();
 		} else {
 			setEstadoAtual(EstadoDoAgente.GAME_OVER);
 		}
 		
-		//Imprime movimento
-		imprimeMovimento(direcao, moveComPulo);
+		return direcao;
 	}
 
-	private void imprimeMovimento(Direcao direcao, boolean moveComPulo) {
-		System.out.println("Agente tentou se mover para " + (direcao == null ? "um local inválido" : "o " + direcao.toString()) + (moveComPulo ? " com pulo" : " sem pulo"));
+	private void imprimeMovimento(Direcao direcao, boolean moveComPulo, int iteracao) {
+		System.out.println("Iteração " + iteracao + " - Movimento efetuado pelo agente: Direção " + (direcao == null ? "inválida" : direcao.toString()) + (moveComPulo ? " com pulo" : " sem pulo") + "\n\n");
 	}
 
 	// genetico ---------------------------------------------------------------
@@ -451,12 +475,14 @@ public class Agente extends Objeto {
 
 	}
 
-	public void ativarAprendizadoDeMaquina() {	
+	public void ativarAprendizadoDeMaquina() {
 		while (estadoAtual != EstadoDoAgente.FORA_DO_LABIRINTO && estadoAtual != EstadoDoAgente.GAME_OVER) {
+			int iteracao = 0;
 			Direcao ultimaDirecao = null;
 			
 			while (estadoAtual == EstadoDoAgente.PROCURANDO_PORTA) {
-				rodarRedeNeural(ultimaDirecao);
+				iteracao++;
+				ultimaDirecao = rodarRedeNeural(ultimaDirecao, iteracao);
 			}
 			
 			if (estadoAtual == EstadoDoAgente.FORA_DO_LABIRINTO) {
@@ -469,6 +495,8 @@ public class Agente extends Objeto {
 				System.out.println("GAME OVER");
 				System.out.println("-x--x--x--x--x--x--x--x--x--x--x-");
 			}
+			
+			if(iteracao < 4) getTabuleiro().resetTabuleiroOpcao1();
 		}
 	}
 	
@@ -527,13 +555,12 @@ public class Agente extends Objeto {
 		if (estadoAtual == EstadoDoAgente.FORA_DO_LABIRINTO) {
 			System.out.println("-*--*--*--*--*--*--*--*--*--*--*-");
 			System.out.println("Labirinto concluído com sucesso!");
-			System.out.println("-*--*--*--*--*--*--*--*--*--*--*-");
+			System.out.println("-*--*--*--*--*--*--*--*--*--*--*-\n\n");
 
 		} else if (estadoAtual == EstadoDoAgente.GAME_OVER) {
 			System.out.println("-x--x--x--x--x--x--x--x--x--x--x-");
 			System.out.println("GAME OVER");
-			System.out.println("-x--x--x--x--x--x--x--x--x--x--x-");
-
+			System.out.println("-x--x--x--x--x--x--x--x--x--x--x-\n\n");
 		}
 	}
 	
