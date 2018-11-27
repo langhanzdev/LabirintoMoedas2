@@ -235,51 +235,6 @@ public class Tabuleiro {
 		}
 	}
 
-	public void imprimeTabuleiroVisivelPeloAgente2() {
-		if (agente != null) {
-			StringBuilder sb = new StringBuilder();
-			
-			//Linha superior ao agente 2
-			Objeto obj = getObjeto(agente.getPosicaoX() - 1, agente.getPosicaoY());
-			if (obj != null && obj.getTipo() != TipoDeObjeto.MURO) {
-				sb.append(montaObjetoParaImprimir(agente.getPosicaoX() - 2, agente.getPosicaoY(), 8));
-				sb.append("\n");
-			}
-			
-			//Linha superior ao agente 1
-			sb.append(montaObjetoParaImprimir(agente.getPosicaoX() - 1, agente.getPosicaoY(), 8));
-			sb.append("\n");
-			
-			//Linha do agente
-			obj = getObjeto(agente.getPosicaoX(), agente.getPosicaoY() - 1);
-			if (obj != null && obj.getTipo() != TipoDeObjeto.MURO) {
-				sb.append(montaObjetoParaImprimir(agente.getPosicaoX(), agente.getPosicaoY() - 2, 2));
-			} else {
-				sb.append("   ");
-			}
-			sb.append(montaObjetoParaImprimir(agente.getPosicaoX(), agente.getPosicaoY() - 1, 2));
-			sb.append(montaObjetoParaImprimir(agente.getPosicaoX(), agente.getPosicaoY(), 2));
-			sb.append(montaObjetoParaImprimir(agente.getPosicaoX(), agente.getPosicaoY() + 1, 2));
-			obj = getObjeto(agente.getPosicaoX(), agente.getPosicaoY() + 1);
-			if (obj != null && obj.getTipo() != TipoDeObjeto.MURO) {
-				sb.append(montaObjetoParaImprimir(agente.getPosicaoX(), agente.getPosicaoY() + 2, 2));
-			}
-			sb.append("\n");
-			
-			//Linha inferior ao agente 1
-			sb.append(montaObjetoParaImprimir(agente.getPosicaoX() + 1, agente.getPosicaoY(), 8));
-			sb.append("\n");
-			
-			//Linha inferior ao agente 2
-			obj = getObjeto(agente.getPosicaoX() + 1, agente.getPosicaoY());
-			if (obj != null && obj.getTipo() != TipoDeObjeto.MURO) {
-				sb.append(montaObjetoParaImprimir(agente.getPosicaoX() + 2, agente.getPosicaoY(), 8));
-			}
-			
-			System.out.println(sb.toString());
-		}
-	}
-	
 	public void imprime() {
 		imprimeTabuleiro();
 		imprimirPontuacao();

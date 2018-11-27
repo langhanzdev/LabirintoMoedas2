@@ -14,7 +14,7 @@ public class Agente extends Objeto {
 	private EstadoDoAgente estadoAtual;
 	private Perceptron rede = new Perceptron();
 
-	// genetico ---------------------------------------------------------------
+	// genetico 
 	private double[][] populacao;
 	//private double[] atual;
 	//private double[] melhor1;
@@ -90,7 +90,7 @@ public class Agente extends Objeto {
 						getTabuleiro().moverAgenteComPulo(direcao);
 					}
 				} else {
-					System.out.println("Movimento nï¿½o permitido!");
+					System.out.println("Movimento nao permitido!");
 				}
 
 			} else if (objeto.getTipo() == TipoDeObjeto.SACO_DE_MOEDAS) {
@@ -108,7 +108,7 @@ public class Agente extends Objeto {
 			//tabuleiro.imprimeTabuleiroVisivelPeloAgente();
 
 		} else {
-			System.out.println("Movimento nï¿½o permitido!");
+			System.out.println("Movimento nao permitido!");
 		}
 	}
 
@@ -333,7 +333,9 @@ public class Agente extends Objeto {
 		if (valorSaidaMovimentoNeuronio1 > valorSaidaMovimentoNeuronio0) {
 			moveComPulo = true;
 		}
-
+		
+		// Imprime tabuleiro sempre
+		getTabuleiro().imprime();
 		// Imprime movimento
 		imprimeMovimento(direcao, moveComPulo, iteracao);
 
@@ -351,14 +353,14 @@ public class Agente extends Objeto {
 				getTabuleiro().moverAgente(direcao);
 			}
 
-			// Imprime tabuleiro
-			getTabuleiro().imprime();
-			/*try {
+			// Imprime tabuleiro somente movimento valido
+			//getTabuleiro().imprime();
+			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}*/
+			}
 		} else {
 			setEstadoAtual(EstadoDoAgente.GAME_OVER);
 			populacao[32] = populacao[32] - 1;
@@ -465,7 +467,7 @@ public class Agente extends Objeto {
 	
 	public void ativarAprendizadoDeMaquina() {
 		//int iteracao = 1;
-		int iteracoesMax = 100;
+		int iteracoesMax = 1000;
 		int[][][] resultados = new int[iteracoesMax][populacao.length][3];
 		
 		for (int iteracao = 0; iteracao < iteracoesMax; iteracao++) {
@@ -493,7 +495,7 @@ public class Agente extends Objeto {
 		
 		for (int i = 0; i < resultados.length; i++) {
 			for (int j = 0; j < populacao.length; j++) {
-				System.out.println("Iteração " + resultados[i][j][0] + ", População " + resultados[i][j][1] + " Recompensa: "  + resultados[i][j][2]);
+				//System.out.println("Iteração " + resultados[i][j][0] + ", População " + resultados[i][j][1] + " Recompensa: "  + resultados[i][j][2]);
 			}
 		}
 	}
@@ -587,7 +589,7 @@ public class Agente extends Objeto {
 
 		if (estadoAtual == EstadoDoAgente.FORA_DO_LABIRINTO) {
 			System.out.println("-*--*--*--*--*--*--*--*--*--*--*-");
-			System.out.println("Labirinto concluï¿½do com sucesso!");
+			System.out.println("Labirinto concluido com sucesso!");
 			System.out.println("-*--*--*--*--*--*--*--*--*--*--*-\n\n");
 
 		} else if (estadoAtual == EstadoDoAgente.GAME_OVER) {
